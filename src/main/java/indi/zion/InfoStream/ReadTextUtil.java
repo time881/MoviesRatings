@@ -10,6 +10,7 @@ import java.io.InputStream;
 import org.apache.spark.sql.catalyst.expressions.Length;
 
 import indi.zion.Constant.SpaceUnit;
+import indi.zion.Constant.StrSplitSign;
 
 public class ReadTextUtil {
 
@@ -65,10 +66,8 @@ public class ReadTextUtil {
     
   //Cut by the end of /n/r characters and return after read size
     public int Trim(byte[] bytes) {
-        byte n = "\n".getBytes()[0];
-        byte r = "\r".getBytes()[0];
         for(int i = bytes.length-1; i >= 0; i--) {
-            if(bytes[i] == n || bytes[i] == r) {
+            if(bytes[i] == StrSplitSign.n || bytes[i] == StrSplitSign.r) {
                 return i;
             }else {
                 bytes[i] = 0;

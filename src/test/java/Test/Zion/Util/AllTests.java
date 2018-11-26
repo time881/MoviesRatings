@@ -61,11 +61,12 @@ public class AllTests {
         String A = "我\r\n是a:bcABC\n";
         byte[] B = A.getBytes();
         byte[] C = new byte[] {97,10,98};
-        changes(C);
-        System.out.println(new String(C));
+        byte[] D = new byte[3];
+        System.arraycopy(C,1,D,0,2);
+        System.out.println(new String(D));
         
         for(byte b : B) {
-            System.out.println(b);
+            //System.out.println(b);
         }
         
     }
