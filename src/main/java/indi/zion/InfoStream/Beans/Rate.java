@@ -1,12 +1,14 @@
 package indi.zion.InfoStream.Beans;
 
-public class Rate{
+public class Rate extends Bean{
 
     private int userID;
     private int movieID;
     private int rate;
     private int timeStamp;
 
+    public Rate() {}
+    
     public Rate(int userID, int movieID, int rate, int timeStamp) {
         this.userID = userID;
         this.movieID = movieID;

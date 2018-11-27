@@ -1,11 +1,13 @@
 package indi.zion.InfoStream.Beans;
 
-public class Tag {
+public class Tag extends Bean{
     private int userID;
     private int movieID;
     private String tag;
     private int timeStamp;
 
+    public Tag() {}
+    
     public Tag(int userID, int movieID, String tag, int timeStamp) {
         this.userID = userID;
         this.movieID = movieID;
