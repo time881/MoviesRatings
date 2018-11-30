@@ -44,7 +44,7 @@ public class TopNSubmit {
         topNRatePath = new Path("hdfs://hserver1:9000/user/root/dataRepo/mltmp/TopNRate");
         movieInPath = new Path("hdfs://hserver1:9000/user/root/dataRepo/mldata/movies.dat");
         outPath = new Path("hdfs://hserver1:9000/user/root/dataRepo/mldata/Result.dat");
-        
+
         mappingjob = Job.getInstance(conf, TopNSubmit.class.getSimpleName() + "Mappingjob");
         mappingjob.setJarByClass(TopNSubmit.class);
         FileInputFormat.setInputPaths(mappingjob, rateInPath);
@@ -70,7 +70,7 @@ public class TopNSubmit {
         topNjob.setInputFormatClass(TextInputFormat.class);
         topNjob.setOutputFormatClass(TextOutputFormat.class);
         FileOutputFormat.setOutputPath(topNjob, topNRatePath);
-        
+
         joinJob = Job.getInstance(conf, TopNSubmit.class.getSimpleName() + "JoinJob");
         joinJob.setJarByClass(TopNSubmit.class);
         FileInputFormat.setInputPaths(joinJob, movieInPath, topNRatePath);
@@ -97,10 +97,10 @@ public class TopNSubmit {
     }
 
     public void CascadeJobs() {
-        
+
         try {
             initJobs();
-            
+
             FileSystem mappingFs = FileSystem.get(mappingPath.toUri(), conf);
             FileSystem TopNFs = FileSystem.get(topNRatePath.toUri(), conf);
             FileSystem ResultFs = FileSystem.get(outPath.toUri(), conf);
@@ -110,22 +110,22 @@ public class TopNSubmit {
             if (TopNFs != null) {
                 TopNFs.delete(topNRatePath, true);
             }
-            if(ResultFs != null) {
+            if (ResultFs != null) {
                 ResultFs.delete(outPath, true);
             }
-            
+
             ControlledJob controlledMappingJob = new ControlledJob(mappingjob.getConfiguration());
             controlledMappingJob.setJob(mappingjob);
             ControlledJob controlledTopNJob = new ControlledJob(topNjob.getConfiguration());
             controlledTopNJob.setJob(topNjob);
             ControlledJob controlledJoinJob = new ControlledJob(joinJob.getConfiguration());
             controlledJoinJob.setJob(joinJob);
-            
+
             controlledTopNJob.addDependingJob(controlledMappingJob);
             controlledJoinJob.addDependingJob(controlledTopNJob);
-            
+
             JobControl controller = new JobControl("TopN Jobs");
-            
+
             controller.addJob(controlledMappingJob);
             controller.addJob(controlledTopNJob);
             controller.addJob(controlledJoinJob);
@@ -152,7 +152,5 @@ public class TopNSubmit {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-
     }
-
 }
