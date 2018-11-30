@@ -50,7 +50,7 @@ public class TopNReduceClass {
                 throws IOException, InterruptedException {
             // TODO Auto-generated method stub
             arg1.forEach((Text MoveId) -> {
-                resultResultSet.put(arg0.get(), new Text(MoveId));//Text be single as default, new for the case
+                resultResultSet.put(arg0.get(), new Text(MoveId));// Text be single as default, new for the case
                 if (resultResultSet.size() > N) {
                     resultResultSet.remove(resultResultSet.firstKey());
                 }
@@ -70,35 +70,33 @@ public class TopNReduceClass {
             });
         }
     }
-    
-    public static class JoinMovieReducer extends Reducer<Text, Text, Text, Text>{
-        
+
+    public static class JoinMovieReducer extends Reducer<Text, Text, Text, Text> {
         @Override
         protected void reduce(Text key, Iterable<Text> line, Reducer<Text, Text, Text, Text>.Context context)
                 throws IOException, InterruptedException {
             // TODO Auto-generated method stub
             ArrayList<String> rates = new ArrayList();
             ArrayList<String> movies = new ArrayList();
-            line.forEach((Text record)->{
+            line.forEach((Text record) -> {
                 String str = record.toString();
                 int t = str.indexOf("\t");
-                if("01".equals(str.substring(0,2))){
-                    rates.add(str.substring(str.lastIndexOf("\t")+1));
-                }else {
-                    
+                if ("01".equals(str.substring(0, 2))) {
+                    rates.add(str.substring(str.lastIndexOf("\t") + 1));
+                } else {
+
                     movies.add(str);
                 }
             });
-            for(String movie : movies) {
-                for(String rate :rates) {
-                    context.write(new Text(rate), new Text(movie.substring(movie.indexOf("\t")+1)));
+            for (String movie : movies) {
+                for (String rate : rates) {
+                    context.write(new Text(rate), new Text(movie.substring(movie.indexOf("\t") + 1)));
                 }
             }
         }
-        
-        
+
         @Override
-        //排序名次
+        // 排序名次
         protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
                 throws IOException, InterruptedException {
             // TODO Auto-generated method stub
