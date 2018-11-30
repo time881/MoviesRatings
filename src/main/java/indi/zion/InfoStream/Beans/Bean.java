@@ -1,5 +1,3 @@
 package indi.zion.InfoStream.Beans;
 
-public abstract class Bean {
-
-}
+public abstract class Bean {}
