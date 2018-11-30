@@ -23,7 +23,6 @@ public class CommonInputFormat extends TextInputFormat {
     @Override
     public RecordReader<LongWritable, Text> getRecordReader(InputSplit genericSplit, JobConf job, Reporter reporter)
             throws IOException {
-
         reporter.setStatus(genericSplit.toString());
         String delimiter = job.get("textinputformat.record.delimiter");
         byte[] recordDelimiterBytes = null;

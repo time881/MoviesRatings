@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import indi.zion.InfoStream.ReadTextUtil;
+import indi.zion.Kafka.TextFileParser.TextReader;
 
 public class MsgProducer {
     private Properties props = new Properties();
@@ -12,17 +12,21 @@ public class MsgProducer {
     private String TagPath;
     
     public MsgProducer() {
-      //InitProp();
+      InitProp();
     }
     
     public void InitProp() {
         try {
-            InputStream inStream = ReadTextUtil.class.getResourceAsStream("ReadText.properties");
+            InputStream inStream = TextReader.class.getResourceAsStream("ReadText.properties");
             props.load(inStream);
             inStream.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+    
+    public void prepareMsg() {
+        
     }
 }
