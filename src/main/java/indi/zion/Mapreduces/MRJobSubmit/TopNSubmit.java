@@ -26,7 +26,7 @@ import indi.zion.Mapreduces.Reduces.TopNReduceClass.RatingPerMovieReducer;
 import indi.zion.Mapreduces.Reduces.TopNReduceClass.TopNMovieReducer;
 
 public class TopNSubmit {
-
+ 
     private Job mappingjob;
     private Job topNjob;
     private Job joinJob;

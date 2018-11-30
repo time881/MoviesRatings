@@ -10,7 +10,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 public class TopNMapperClass {
-
+ 
     // rating map solution get local top N record
     public static class RatingPerMovieMapper extends Mapper<LongWritable, Text, Text, ArrayPrimitiveWritable> {
 

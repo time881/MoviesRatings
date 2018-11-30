@@ -11,7 +11,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 public class TopNReduceClass {
-
+ 
     // Calculate mean rate per movie
     public static class RatingPerMovieReducer extends Reducer<Text, ArrayPrimitiveWritable, Text, DoubleWritable> {
         /*
