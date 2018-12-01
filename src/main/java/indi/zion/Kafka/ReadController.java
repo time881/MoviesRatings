@@ -17,13 +17,14 @@ public class ReadController<T extends Bean> {
     private TextReader byteReader;
     private BeansPrep beansPrep;
     private Class<?> beanClass;
-    private int offset = 0;
+    private long offset = 0;
 
-    public ReadController(String filePath, String requestedSize, Class<T> beanClass) {
+    public ReadController(String filePath, String requestedSize, Class<T> beanClass, long startPlace) {
         this.beanClass = beanClass;
         this.byteReader = new TextReader(filePath);
         this.requestedSize = CommonUtil.FormatUnit(requestedSize);
         this.beansPrep = new BeansPrep<T>(beanClass);
+        this.offset = startPlace;
     }
 
     public ArrayList<T> Read() {
