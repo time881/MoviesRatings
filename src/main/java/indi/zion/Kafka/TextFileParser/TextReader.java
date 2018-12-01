@@ -20,7 +20,6 @@ import indi.zion.Util.CommonUtil;
  *
  */
 public class TextReader {
-
     private String TextPath;
     private double BlockCapcity;
     private long Offset;
