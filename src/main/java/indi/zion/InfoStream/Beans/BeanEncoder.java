@@ -20,6 +20,5 @@ public class BeanEncoder<T extends Bean> implements Serializer<T>{
     @Override
     public void close() {
         // TODO Auto-generated method stub
-        
     }
 }
