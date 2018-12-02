@@ -19,15 +19,31 @@ public class Tag extends Bean{
         return userID;
     }
 
+    public void setUserID(Integer userID) {
+        this.userID = userID;
+    }
+
     public int getMovieID() {
         return movieID;
+    }
+
+    public void setMovieID(Integer movieID) {
+        this.movieID = movieID;
     }
 
     public String getTag() {
         return tag;
     }
 
+    public void setTag(String tag) {
+        this.tag = tag;
+    }
+
     public int getTimeStamp() {
         return timeStamp;
+    }
+
+    public void setTimeStamp(Integer timeStamp) {
+        this.timeStamp = timeStamp;
     }
 }
