@@ -4,12 +4,12 @@ public class Rate extends Bean{
 
     private int userID;
     private int movieID;
-    private int rate;
+    private double rate;
     private int timeStamp;
 
     public Rate() {}
     
-    public Rate(int userID, int movieID, int rate, int timeStamp) {
+    public Rate(int userID, int movieID, double rate, int timeStamp) {
         this.userID = userID;
         this.movieID = movieID;
         this.rate = rate;
@@ -20,15 +20,31 @@ public class Rate extends Bean{
         return userID;
     }
 
+    public void setUserID(Integer userID) {
+        this.userID = userID;
+    }
+
     public int getMovieID() {
         return movieID;
     }
 
-    public int getRate() {
+    public void setMovieID(Integer movieID) {
+        this.movieID = movieID;
+    }
+
+    public double getRate() {
         return rate;
+    }
+
+    public void setRate(Double rate) {
+        this.rate = rate;
     }
 
     public int getTimeStamp() {
         return timeStamp;
+    }
+
+    public void setTimeStamp(Integer timeStamp) {
+        this.timeStamp = timeStamp;
     }
 }
