@@ -21,12 +21,13 @@ import indi.zion.Util.CommonUtil;
  */
 public class TextReader {
     private String TextPath;
+    private File file;
     private double BlockCapcity;
     private long Offset;
     private byte[] Block;
 
     public TextReader(String TextPath) {
-        this(TextPath, 0.5 + SpaceUnit.M);
+        this(TextPath, 0.1 + SpaceUnit.M);
     }
 
     public TextReader(String TextPath, String BlockCapcity) {
@@ -36,6 +37,7 @@ public class TextReader {
     public TextReader(String TextPath, String BlockCapcity, int Offset) {
         // TODO Auto-generated constructor stub
         this.TextPath = TextPath;
+        this.file = new File(this.TextPath);
         this.Offset = Offset;
         this.BlockCapcity = CommonUtil.FormatUnit(BlockCapcity);
     }
@@ -62,11 +64,14 @@ public class TextReader {
         this.Block = null;
     }
 
-    public int LoadBlock() {
+    public long LoadBlock() {
+        return LoadBlock(this.Offset);
+    }
+    
+    public long LoadBlock(long Offset) {
         try {
-            File file = new File(TextPath);
             InputStream inputStream = new FileInputStream(file);
-            inputStream.skip(Offset - 1);
+            inputStream.skip(Offset);
             InputStream sbs = new BufferedInputStream(inputStream);
             ByteArrayOutputStream readedByte = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024];
@@ -92,7 +97,7 @@ public class TextReader {
     // Cut by the end of /n|/r characters and return after read size
     private int Trim(byte[] bytes) {
         for (int i = bytes.length - 1; i >= 0; i--) {
-            if (bytes[i] == StrSplitSign.n || bytes[i] == StrSplitSign.r) {
+            if (bytes[i] == StrSplitSign.n || bytes[i] == StrSplitSign.r || bytes[i] == StrSplitSign.end) {
                 return i;
             } else {
                 bytes[i] = 0;
