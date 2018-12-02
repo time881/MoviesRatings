@@ -28,7 +28,7 @@ public class ReadController<T extends Bean> {
     }
 
     public ArrayList<T> Read() {
-        int readSize = -1;
+        long readSize = -1;
         //init pool
         ThreadPoolExecutor executor = new ThreadPoolExecutor(4, 4, 1, TimeUnit.DAYS, 
                 new LinkedBlockingQueue<Runnable>(8),
@@ -44,23 +44,32 @@ public class ReadController<T extends Bean> {
                         }
                     }
                 });
-        Object syn = new Object();
         ArrayList<T> beans = new ArrayList<T>();
-        while (requestedSize > byteReader.getOffset() || readSize != 0) {
+        while (requestedSize > byteReader.getOffset() && readSize != 0) {
             readSize = byteReader.LoadBlock();
+            byte[] Tmp = byteReader.getBlock();
             offset += readSize;
             executor.submit(new Runnable() {
                 @Override
                 public void run() {
                     // TODO Auto-generated method stub
-                    ArrayList<T> Temp = beansPrep.ToBeans(byteReader.getBlock());
-                    synchronized (syn) {
+                    ArrayList<T> Temp = beansPrep.ToBeans(Tmp);
+                    synchronized (beans) {
                         beans.addAll(Temp);
                     }
                 }
             });
             byteReader.setOffset(offset);
         }
+        executor.shutdown();
+        while(!executor.isTerminated()){  // all threads in pool has bean ran
+             try {
+                Thread.sleep(5);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }    
+         }
         return beans;
     }
 }
