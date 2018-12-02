@@ -6,6 +6,8 @@ public class TempClassUtil {
             return "java.lang.String";
         } else if ("int".equals(className)) {
             return "java.lang.Integer";
+        }else if ("double".equals(className)) {
+            return "java.lang.Double";
         }
         return "";
     }
@@ -14,13 +16,13 @@ public class TempClassUtil {
         Object o = new Object();
         try {
             String className = clz.getName();
+            String str = new String(b);
             if ("java.lang.String".equals(className)) {
-                o = new String(b);
+                o = str;
             }else if("java.lang.Integer".equals(className)) {
-                o = (int) ((b[0] & 0xFF)   
-                        | ((b[1] & 0xFF)<<8)   
-                        | ((b[2] & 0xFF)<<16)   
-                        | ((b[3] & 0xFF)<<24)); 
+                o = Integer.valueOf(str); 
+            }else if("java.lang.Double".equals(className)) {
+                o = Double.valueOf(str);
             }
             if (clz.isInstance(o)) {
                 return clz.cast(o);
