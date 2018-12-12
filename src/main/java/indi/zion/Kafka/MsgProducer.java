@@ -3,8 +3,17 @@ package indi.zion.Kafka;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.ListTopicsResult;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -20,18 +29,22 @@ public class MsgProducer {
     private String RatePath;
     private String TagPath;
     private KafkaProducer<String, Rate> kfkprod;
-    private ReadController readController;
-    
+    private ReadController<Rate> readController;
+    private int sleepSpeed = 10 * 1000;
+    private String sizeSpeed = 0.6 + SpaceUnit.K;
+
     public MsgProducer() {
-      InitProp();
-      kfkprod = new KafkaProducer<String, Rate>(props);
-      RatePath = props.getProperty("ratingPath");//one case
-      readController = new ReadController<Rate>(RatePath, 3+SpaceUnit.M, Rate.class, 0);//pipe of reading beans, read requestedSize once 
+        InitProp();
+        kfkprod = new KafkaProducer<String, Rate>(props);
+        RatePath = props.getProperty("ratingPath");// one case
+        readController = new ReadController<Rate>(RatePath, sizeSpeed, Rate.class, 0);// pipe of reading beans, read
+                                                                                      // requestedSize once
     }
-    
+
+    @SuppressWarnings("resource")
     public void InitProp() {
         try {
-            InputStream TextIS = MsgProducer.class.getResourceAsStream("Read.properties");
+            InputStream TextIS = MsgProducer.class.getResourceAsStream("ReadPath.properties");
             InputStream ProducerIS = MsgProducer.class.getResourceAsStream("Producer.properties");
             props.load(TextIS);
             props.load(ProducerIS);
@@ -44,37 +57,64 @@ public class MsgProducer {
             e.printStackTrace();
         }
     }
-    
-    
+
     public void SendMsg() {
-        ArrayList<Rate> tmp;
-        long leftTime;//count time of run one times
-        while(true) {
-            long currentTime=System.currentTimeMillis();
-            tmp = readController.Read();
-            if(tmp.size() != 0) {
-                for(Rate r : tmp) {
-                    ProducerRecord<String, Rate> record = new ProducerRecord<String, Rate>(props.getProperty("TOPIC"),r);
-                    kfkprod.send(record, new SendCallback(record, 0));
+        try {
+            ArrayList<Rate> tmp;
+            long leftTime;// count time of run one times
+            CheckKafkaTopic(props.getProperty("bootstrap.servers"), props.getProperty("TOPIC"));
+            while (true) {
+                long currentTime = System.currentTimeMillis();
+                tmp = readController.Read();
+                if (tmp.size() != 0) {
+                    for (Rate r : tmp) {
+                        ProducerRecord<String, Rate> record = new ProducerRecord<String, Rate>(
+                                props.getProperty("TOPIC"), r);
+                        kfkprod.send(record, new SendCallback(record, 0));
+                    }
+                }
+                leftTime = sleepSpeed - (System.currentTimeMillis() - currentTime);
+                System.out.println(leftTime);
+                if (leftTime > 0) {
+                    try {
+                        Thread.sleep(leftTime);
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
                 }
             }
-            leftTime = 1 - (System.currentTimeMillis() - currentTime);
-            if(leftTime > 0) {
-                try {
-                    Thread.sleep(leftTime);
-                } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
+        } catch (Exception e) {
+            // TODO: handle exception
+            e.printStackTrace();
         }
+
     }
-    
+
+    private void CheckKafkaTopic(String bootstrapServer, String topic) throws InterruptedException, ExecutionException {
+        // TODO Auto-generated method stub
+        Properties properties = new Properties();
+        properties.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
+        AdminClient adminClient = AdminClient.create(properties);
+        ListTopicsResult listTopics = adminClient.listTopics();
+        Set<String> names = listTopics.names().get();
+        if(!names.contains(topic)) {
+            List<NewTopic> topicList = new ArrayList<NewTopic>();
+            Map<String, String> configs = new HashMap<String, String>();
+            int partitions = 5;
+            Short replication = 1;
+            NewTopic newTopic = new NewTopic(topic, partitions, replication).configs(configs);
+            topicList.add(newTopic);
+            adminClient.createTopics(topicList);
+        }
+        adminClient.close();
+    }
+
     /**
      * producer回调
      */
     static class SendCallback implements Callback {
-        ProducerRecord<String, String> record;
+        ProducerRecord<String, Rate> record;
         int sendSeq = 0;
 
         public SendCallback(ProducerRecord record, int sendSeq) {
@@ -88,7 +128,7 @@ public class MsgProducer {
             if (null == e) {
                 String meta = "topic:" + recordMetadata.topic() + ", partition:" + recordMetadata.topic() + ", offset:"
                         + recordMetadata.offset();
-                System.out.println("send message success, record:" + record.toString() + ", meta:" + meta);
+                System.out.println("send message success, record:" + record.value().getMovieID() + ", meta:" + meta);
                 return;
             }
             // send failed
