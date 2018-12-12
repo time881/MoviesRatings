@@ -23,11 +23,12 @@ public class TextReader {
     private String TextPath;
     private File file;
     private double BlockCapcity;
+    private static String unitSpeed = 0.3 + SpaceUnit.K;
     private long Offset;
     private byte[] Block;
 
     public TextReader(String TextPath) {
-        this(TextPath, 0.1 + SpaceUnit.M);
+        this(TextPath, unitSpeed);
     }
 
     public TextReader(String TextPath, String BlockCapcity) {
