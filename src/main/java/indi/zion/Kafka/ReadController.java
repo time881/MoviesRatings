@@ -18,6 +18,7 @@ public class ReadController<T extends Bean> {
     private BeansPrep beansPrep;
     private Class<?> beanClass;
     private long offset = 0;
+    private long lastoffset = 0;
 
     public ReadController(String filePath, String requestedSize, Class<T> beanClass, long startPlace) {
         this.beanClass = beanClass;
@@ -45,7 +46,7 @@ public class ReadController<T extends Bean> {
                     }
                 });
         ArrayList<T> beans = new ArrayList<T>();
-        while (requestedSize > byteReader.getOffset() && readSize != 0) {
+        while (requestedSize >= byteReader.getOffset()-lastoffset && readSize != 0) {
             readSize = byteReader.LoadBlock();
             byte[] Tmp = byteReader.getBlock();
             offset += readSize;
@@ -68,8 +69,9 @@ public class ReadController<T extends Bean> {
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            }    
+            } 
          }
+        lastoffset += byteReader.getOffset();
         return beans;
     }
 }
