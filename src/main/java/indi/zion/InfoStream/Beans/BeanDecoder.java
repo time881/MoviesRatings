@@ -1,13 +1,24 @@
 package indi.zion.InfoStream.Beans;
 
-import kafka.serializer.Decoder;
+import java.util.Map;
 
-public class BeanDecoder<T extends Bean> implements Decoder<T> {
+import org.apache.kafka.common.serialization.Deserializer;
 
-    @SuppressWarnings("unchecked")
+public class BeanDecoder<T extends Bean> implements Deserializer<T> {
+
     @Override
-    public T fromBytes(byte[] arg0) {
+    public void configure(Map<String, ?> configs, boolean isKey) {
         // TODO Auto-generated method stub
-        return (T) T.toBean(arg0);
+    }
+
+    @Override
+    public T deserialize(String topic, byte[] data) {
+        // TODO Auto-generated method stub
+        return (T) T.toBean(data);
+    }
+
+    @Override
+    public void close() {
+        // TODO Auto-generated method stub
     }
 }
