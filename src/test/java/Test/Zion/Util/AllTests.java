@@ -14,6 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.io.Text;
+import org.apache.tools.ant.taskdefs.Sleep;
 import org.junit.Test;
 
 import indi.zion.Kafka.TextFileParser.TextReader;
@@ -128,7 +129,7 @@ public class AllTests {
         }
     }
 
-    @Test
+    //@Test
     public void ThreadPool() {
         try {
             BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(4); // 固定为4的线程队列
@@ -158,5 +159,13 @@ public class AllTests {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    @Test
+    public void TimeTest() throws InterruptedException {
+        Long a = System.currentTimeMillis();
+        Thread.sleep(1000);
+        System.out.println(System.currentTimeMillis()-a);
+        
     }
 }

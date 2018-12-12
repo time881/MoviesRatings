@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import indi.zion.Constant.SpaceUnit;
 import indi.zion.InfoStream.Beans.Rate;
+import indi.zion.Kafka.MsgConsumer;
+import indi.zion.Kafka.MsgProducer;
 import indi.zion.Kafka.ReadController;
 import indi.zion.Kafka.TextFileParser.BeansPrep;
 import indi.zion.Kafka.TextFileParser.TextReader;
@@ -19,7 +21,7 @@ public class KafkaTest {
         //fail("Not yet implemented");
     }
     
-    @Test
+    //@Test
     public void ByteReadAndTransferTest() {
         String FilePath = "D:\\Document\\DataCollection\\jankon6_10607013\\ml-data-10M\\ml-data-10M\\TestText.txt";
         BeansPrep bp = new BeansPrep<Rate>(Rate.class);
@@ -82,7 +84,7 @@ public class KafkaTest {
         System.out.println("ByteReadAndTransferTest pass-----------------------------------------------------------");
     }
     
-    @Test
+    //@Test
     public void ReadController() {
         String FilePath = "D:\\Document\\DataCollection\\jankon6_10607013\\ml-data-10M\\ml-data-10M\\TestText.txt";
         ReadController rc = new ReadController<Rate>(FilePath, 1+SpaceUnit.M, Rate.class, 0);
@@ -91,4 +93,16 @@ public class KafkaTest {
         System.out.println(list.size());
         System.out.println(tmp.getMovieID()+ " "+tmp.getUserID() + " "+ tmp.getTimeStamp() + " " + tmp.getRate());
     }
+    
+    //@Test
+    public void kafkaProcedure() {
+        MsgProducer mp = new MsgProducer();
+        mp.SendMsg();
+    }
+    @Test
+    public void KafkaConsume() {
+        MsgConsumer mc = new MsgConsumer();
+        mc.Consumer();
+    }
+    
 }
