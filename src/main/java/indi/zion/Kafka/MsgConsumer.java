@@ -38,6 +38,7 @@ public class MsgConsumer {
         return null;
     }
     
+    //Consumer 
     public void Consumer() {
         try {
             consumer = InitProp();
