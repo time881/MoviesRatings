@@ -29,6 +29,7 @@ public class MsgConsumer {
             props.load(inStream);
             props.put("key.deserializer", StringDeserializer.class.getName());
             props.put("value.deserializer", new BeanDecoder<Rate>().getClass().getName());
+            props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, props.getProperty("bootstrap.servers"));
             inStream.close();
             return new KafkaConsumer<String, Rate>(props);
         } catch (Exception e) {
@@ -42,11 +43,7 @@ public class MsgConsumer {
     public void Consumer() {
         try {
             consumer = InitProp();
-            Properties properties = new Properties();
-            properties.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, props.getProperty("bootstrap.servers"));
-            AdminClient adminClient = AdminClient.create(properties);
-            ListTopicsResult listTopics = adminClient.listTopics();
-            Set<String> names = listTopics.names().get();
+            Set<String> names = AdminClient.create(props).listTopics().names().get();
             if(names.contains(props.getProperty("TOPIC"))) {
                 consumer.subscribe(Arrays.asList(props.getProperty("TOPIC")));
                 while(true) {
