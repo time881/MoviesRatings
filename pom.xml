@@ -19,7 +19,8 @@
 		<hadoop.version>2.7.3</hadoop.version>
 		<hive.version>2.1.0</hive.version>
 		<hbase.version>1.2.4</hbase.version>
-		<spark.version>2.3.0</spark.version>
+		<spark.version>2.2.1</spark.version>
+		<!-- <spark.version>2.3.0</spark.version> -->
 		<scala.version>2.11</scala.version>
 		<kafka.version>2.0.0</kafka.version>
 		<mrunit.version>1.1.0</mrunit.version>
@@ -79,7 +80,18 @@
 			<groupId>org.apache.kafka</groupId>
 			<artifactId>kafka_2.11</artifactId>
 			<version>${kafka.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.6.6</version>
 		</dependency>
 
 		<dependency>
@@ -126,6 +138,11 @@
 		<!-- hbase client -->
 		<dependency>
 			<groupId>org.apache.hbase</groupId>
+			<artifactId>hbase-common</artifactId>
+			<version>${hbase.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hbase</groupId>
 			<artifactId>hbase-server</artifactId>
 			<version>${hbase.version}</version>
 		</dependency>
@@ -135,14 +152,18 @@
 			<version>${hbase.version}</version>
 		</dependency>
 
-
-
+    <!-- https://mvnrepository.com/artifact/org.apache.hbase/hbase-spark -->
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-spark</artifactId>
+            <version>2.0.0-alpha4</version>
+        </dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-streaming_2.10 -->
-		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-streaming_${scala.version}</artifactId>
-			<version>${spark.version}</version>
-		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>org.apache.spark</groupId> -->
+		<!-- <artifactId>spark-streaming_${scala.version}</artifactId> -->
+		<!-- <version>${spark.version}</version> -->
+		<!-- </dependency> -->
 
 		<!-- https://mvnrepository.com/artifact/com.datastax.spark/spark-cassandra-connector_2.11 -->
 		<dependency>
@@ -190,14 +211,21 @@
 			<version>2.3</version>
 		</dependency>
 
-
+		<!--高性能反射工具 -->
+		<dependency>
+			<groupId>com.esotericsoftware</groupId>
+			<artifactId>reflectasm</artifactId>
+			<version>1.11.0</version>
+		</dependency>
 	</dependencies>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>io.netty</groupId>
 				<artifactId>netty-all</artifactId>
-				<version>4.1.18.Final</version>
+				<!-- <version>4.1.18.Final</version> -->
+				<version>4.0.43.Final</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

@@ -1,5 +1,6 @@
 package indi.zion.Kafka;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -46,8 +47,22 @@ public class MsgProducer {
         try {
             InputStream TextIS = MsgProducer.class.getResourceAsStream("ReadPath.properties");
             InputStream ProducerIS = MsgProducer.class.getResourceAsStream("Producer.properties");
-            props.load(TextIS);
-            props.load(ProducerIS);
+            if (TextIS == null || ProducerIS == null) {
+                try {
+                    // Read outside properties for package
+                    FileInputStream FileTextIS = new FileInputStream("config_properties//Kafka//ReadPath.properties");
+                    FileInputStream FileProducerIS = new FileInputStream(
+                            "config_properties//Kafka//ReadPath.properties");
+                    props.load(FileTextIS);
+                    props.load(FileProducerIS);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                props.load(TextIS);
+                props.load(ProducerIS);
+            }
+
             props.put("key.serializer", StringSerializer.class.getName());
             props.put("value.serializer", new BeanEncoder<Rate>().getClass().getName());
             TextIS.close();
@@ -98,7 +113,7 @@ public class MsgProducer {
         AdminClient adminClient = AdminClient.create(properties);
         ListTopicsResult listTopics = adminClient.listTopics();
         Set<String> names = listTopics.names().get();
-        if(!names.contains(topic)) {
+        if (!names.contains(topic)) {
             List<NewTopic> topicList = new ArrayList<NewTopic>();
             Map<String, String> configs = new HashMap<String, String>();
             int partitions = 5;
