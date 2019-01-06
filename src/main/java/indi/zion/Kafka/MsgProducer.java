@@ -45,8 +45,8 @@ public class MsgProducer {
     @SuppressWarnings("resource")
     public void InitProp() {
         try {
-            InputStream TextIS = MsgProducer.class.getResourceAsStream("ReadPath.properties");
-            InputStream ProducerIS = MsgProducer.class.getResourceAsStream("Producer.properties");
+            InputStream TextIS = MsgProducer.class.getClassLoader().getResourceAsStream("Kafka/ReadPath.properties");
+            InputStream ProducerIS = MsgProducer.class.getClassLoader().getResourceAsStream("Kafka/Producer.properties");
             if (TextIS == null || ProducerIS == null) {
                 try {
                     // Read outside properties for package

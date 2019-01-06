@@ -6,12 +6,9 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.ListTopicsResult;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -26,11 +23,12 @@ public class MsgConsumer {
 
     private KafkaConsumer InitProp() {
         try {
-            InputStream inStream = MsgConsumer.class.getResourceAsStream("Consumer.properties");
+            InputStream inStream = MsgConsumer.class.getClassLoader().getResourceAsStream("Kafka/Consumer.properties");
             if (inStream == null) {
                 try {
                     FileInputStream FileProducerIS = new FileInputStream(
-                            "config_properties//Kafka//ReadPath.properties");
+                            "target//config_properties//Kafka//ReadPath.properties");
+
                     props.load(FileProducerIS);
                 } catch (Exception e) {
                     e.printStackTrace();
