@@ -23,6 +23,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
@@ -129,12 +130,16 @@ class StatisticTool implements Serializable {
 
     public static JavaPairDStream<Integer, Tuple2<Double, Integer>> MapToRateWithCount(
             JavaInputDStream<ConsumerRecord<String, Rate>> records) {
-        JavaPairDStream<Integer, Tuple2<Double, Integer>> kv = records
-                .mapToPair((ConsumerRecord<String, Rate> record) -> {
-                    return new Tuple2<Integer, Tuple2<Double, Integer>>(record.value().getMovieID(),
-                            new Tuple2<Double, Integer>(record.value().getRate(), 1));
+
+        JavaPairDStream<Integer, Tuple2<Double, Integer>> kv1 = records
+                .mapToPair(new PairFunction<ConsumerRecord<String, Rate>, Integer, Tuple2<Double, Integer>>() {
+                    @Override
+                    public Tuple2<Integer, Tuple2<Double, Integer>> call(ConsumerRecord<String, Rate> record) throws Exception {
+                        return new Tuple2<Integer, Tuple2<Double, Integer>>(record.value().getMovieID(),
+                                new Tuple2<Double, Integer>(record.value().getRate(), 1));
+                    }
                 });
-        return kv;
+        return kv1;
     }
 
     public static JavaPairDStream<Integer, Tuple2<Double, Integer>> MapPairToCount(
