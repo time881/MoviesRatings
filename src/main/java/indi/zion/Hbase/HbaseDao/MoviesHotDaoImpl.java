@@ -19,7 +19,7 @@ public class MoviesHotDaoImpl implements MoviesHotDao {
 
     private void InitProperties() {
         try {
-            InputStream inStream = MoviesHotStatistic.class.getClassLoader().getResourceAsStream("Hbase/HbaseConnect.properties");
+            InputStream inStream = MoviesHotDaoImpl.class.getClassLoader().getResourceAsStream("Hbase/HbaseConnect.properties");
             if (inStream == null) {
                 FileInputStream FileInStream = new FileInputStream(
                         "target//config_properties//Hbase//HbaseConnect.properties");
@@ -57,8 +57,15 @@ public class MoviesHotDaoImpl implements MoviesHotDao {
                 filterlist.add(timeFilterStop);
                 scan.setFilter(new FilterList(FilterList.Operator.MUST_PASS_ALL, filterlist));
                 ResultScanner results = table.getScanner(scan);
-                for (Result result : results) {
-
+                try {
+                    for (Result result : results) {
+                        //process result...
+                        System.out.println(result);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    results.close();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
