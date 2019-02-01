@@ -1,30 +1,36 @@
 package indi.zion.Kafka.SparkStreaming;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.spark.JavaHBaseContext;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.PairFunction;
+import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.api.java.function.VoidFunction2;
 import org.apache.spark.streaming.Durations;
+import org.apache.spark.streaming.Time;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
@@ -44,36 +50,45 @@ public class MoviesHotStatistic {
 
     private void InitProp() {
         try {
-            InputStream inStream = MoviesHotStatistic.class.getClassLoader().getResourceAsStream("Spark/SparkConsumer.properties");
+            InputStream inStream = MoviesHotStatistic.class.getClassLoader().getResourceAsStream("Spark/Consumer.properties");
             if (inStream == null) {
                 try {
                     FileInputStream FileInStream = new FileInputStream(
                             "target//config_properties//Kafka//SparkStreaming//Consumer.properties");
-                    props.load(FileInStream);
+                    if (FileInStream != null) {
+                        props.load(FileInStream);
+                        FileInStream.close();
+                    } else {
+                        throw new Exception("no property file being found");
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             } else {
                 props.load(inStream);
+                inStream.close();
             }
             props.put("key.deserializer", StringDeserializer.class.getName());
             props.put("value.deserializer", new BeanDecoder<Rate>().getClass().getName());
             props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, props.getProperty("bootstrap.servers"));
-            inStream.close();
-
             InputStream hbaseInStream = MoviesHotStatistic.class.getClassLoader().getResourceAsStream("Hbase/HbaseConnect.properties");
             if (hbaseInStream == null) {
                 try {
                     FileInputStream HbaseFileInStream = new FileInputStream(
                             "target//config_properties//Hbase//HbaseConnect.properties");
-                    hbaseProps.load(HbaseFileInStream);
+                    if (HbaseFileInStream != null) {
+                        hbaseProps.load(HbaseFileInStream);
+                        HbaseFileInStream.close();
+                    } else {
+                        throw new Exception("no property file being found");
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             } else {
                 hbaseProps.load(hbaseInStream);
+                hbaseInStream.close();
             }
-            inStream.close();
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -82,15 +97,18 @@ public class MoviesHotStatistic {
 
     /**
      * hbase table name: MoviesHotMeanRate
-     * table structure: "family", "movieID", "movieRate"
+     * table structure: "family", "movieID", "movieRate", "time"
      */
     public void ExcuteWithDirect() throws InterruptedException, ExecutionException {
-        String[] HbaseTable = new String[]{"MoviesHotMeanRate", "family", "movieID", "movieRate"};
+        //Define the table structure
+        String[] HbaseTable = new String[]{"MoviesHotMeanRate", "family", "movieID", "movieRate", "time"};
+        String[] HbaseTableTest = new String[]{"MoviesHotMeanRateTest", "family", "movieID", "movieRate", "time"};
         InitProp();
         Set<String> names = AdminClient.create(props).listTopics().names().get();
         if (names.contains(props.getProperty("TOPIC"))) {
-            SparkConf conf = new SparkConf().setMaster((String) props.get("Spark.Master"))
+            SparkConf conf = new SparkConf()//.setMaster("local")//.setMaster((String) props.get("Spark.Master"))
                     .setAppName(this.getClass().getSimpleName().replaceAll("$", ""));
+                   // .setJars(new String[]{"D:\\WorkBenchForIDE\\MoviesRatings\\classes\\artifacts\\MoviesRatings_jar\\MoviesRatings.jar"});
             JavaSparkContext js = new JavaSparkContext(conf);
             JavaStreamingContext jsc = new JavaStreamingContext(js, Durations.seconds(3));
             Collection<String> topic = Arrays.asList(props.getProperty("TOPIC"));
@@ -103,19 +121,26 @@ public class MoviesHotStatistic {
 
             kafkaParams.put("group.id", props.get("group.id"));
             kafkaParams.put("auto.offset.reset", props.get("auto.offset.reset"));
+            kafkaParams.put("metadata.broker.list", props.get("bootstrap.servers"));
             kafkaParams.put("bootstrap.servers", props.get("bootstrap.servers"));
             kafkaParams.put("key.deserializer", StringDeserializer.class);
             kafkaParams.put("value.deserializer", new BeanDecoder<Rate>().getClass());
-            kafkaParams.put("enable.auto.commit", false);
-
-            JavaInputDStream<ConsumerRecord<String, Rate>> records = KafkaUtils.createDirectStream(jsc,
+            kafkaParams.put("enable.auto.commit", props.get("enable.auto.commit"));
+            Map<TopicPartition, Long> offsets = new HashMap<>();
+            offsets.put(new TopicPartition((String)props.getProperty("TOPIC"), 0), 2L);
+            JavaInputDStream<ConsumerRecord<String, Rate>> records = KafkaUtils.createDirectStream(
+                    jsc,
                     LocationStrategies.PreferConsistent(),
                     ConsumerStrategies.<String, Rate>Subscribe(topic, kafkaParams));
-
+            System.out.println("=================================length of records is "+records.count()+"======================================");
             JavaPairDStream<Integer, Tuple2<Double, Integer>> kv = StatisticTool.MapToRateWithCount(records);
             JavaPairDStream<Integer, Tuple2<Double, Integer>> result = StatisticTool.MapPairToCount(kv);
             JavaDStream<String> MeanByMID = StatisticTool.MeanRate(result);
-            StatisticTool.PrintOut(MeanByMID, js, config, HbaseTable);
+            try {
+                StatisticTool.PrintOut(MeanByMID, config, HbaseTableTest);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             jsc.start();
             jsc.awaitTermination();
             jsc.stop();
@@ -130,7 +155,6 @@ class StatisticTool implements Serializable {
 
     public static JavaPairDStream<Integer, Tuple2<Double, Integer>> MapToRateWithCount(
             JavaInputDStream<ConsumerRecord<String, Rate>> records) {
-
         JavaPairDStream<Integer, Tuple2<Double, Integer>> kv1 = records
                 .mapToPair(new PairFunction<ConsumerRecord<String, Rate>, Integer, Tuple2<Double, Integer>>() {
                     @Override
@@ -162,17 +186,55 @@ class StatisticTool implements Serializable {
     }
 
 
-    public static void PrintOut(JavaDStream<String> results, JavaSparkContext sc, Configuration config, String[] HbaseTableInfo) {
-        Configuration configuration = HBaseConfiguration.create();
-        configuration.addResource(config);
-        JavaHBaseContext hbaseContext = new JavaHBaseContext(sc, configuration);
-        hbaseContext.streamBulkPut(results, TableName.valueOf(HbaseTableInfo[0]),
-                (String record) -> {
-                    String[] keyValue = record.split(":");
-                    Put put = new Put(keyValue[0].getBytes());
-                    put.addColumn(HbaseTableInfo[1].getBytes(), HbaseTableInfo[2].getBytes(), keyValue[1].getBytes());
-                    put.addColumn(HbaseTableInfo[1].getBytes(), HbaseTableInfo[3].getBytes(), keyValue[2].getBytes());
-                    return new Put(keyValue[0].getBytes());
+    public static void PrintOut(JavaDStream<String> results, Configuration config, String[] HbaseTableInfo) throws IOException {
+        results.foreachRDD(new VoidFunction<JavaRDD<String>>() {
+            @Override
+            public void call(JavaRDD<String> stringJavaRDD) throws Exception {
+                stringJavaRDD.foreachPartition(new VoidFunction<Iterator<String>>() {
+                    @Override
+                    public void call(Iterator<String> stringIterator) throws Exception {
+                        System.out.println("============================"+HbaseTableInfo[0]+"=============================================");
+                        Configuration configuration = HBaseConfiguration.create();
+                        Connection connection = ConnectionFactory.createConnection(configuration);
+                        Table table = connection.getTable(TableName.valueOf(HbaseTableInfo[0]));
+                        List<Put> puts = new ArrayList<Put>();
+                        stringIterator.forEachRemaining(
+                                new Consumer<String>() {
+                                    @Override
+                                    public void accept(String record) {
+                                        String[] keyValue = record.split(":");
+                                        Put put = new Put(keyValue[0].getBytes());
+                                        put.addColumn(HbaseTableInfo[1].getBytes(), HbaseTableInfo[2].getBytes(), keyValue[1].getBytes());
+                                        put.addColumn(HbaseTableInfo[1].getBytes(), HbaseTableInfo[3].getBytes(), keyValue[2].getBytes());
+                                        put.addColumn(HbaseTableInfo[1].getBytes(), HbaseTableInfo[4].getBytes(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()).getBytes());
+                                        puts.add(put);
+                                    }
+                                }
+                        );
+                        table.put(puts);
+                    }
                 });
+
+                stringJavaRDD.foreach(new VoidFunction<String>() {
+                    @Override
+                    public void call(String record) throws Exception {
+
+                    }
+                });
+            }
+        });
+                /*
+        results.foreachRDD(new VoidFunction<JavaRDD<String>>() {
+            @Override
+            public void call(JavaRDD<String> stringJavaRDD) throws Exception {
+                stringJavaRDD.foreach(new VoidFunction<String>() {
+                    @Override
+                    public void call(String s) throws Exception {
+                        System.out.println("====================================================get===========================================");
+                        System.out.println(s);
+                    }
+                });
+            }
+        });*/
     }
 }
