@@ -19,13 +19,11 @@ import indi.zion.Util.CommonUtil;
  * @author Administrator
  *
  */
-public class TextReader {
+public class TextReader implements BlockReader{
     private String TextPath;
     private File file;
     private double BlockCapcity;
-    private static String unitSpeed = 0.3 + SpaceUnit.K;
-    private long Offset;
-    private byte[] Block;
+    private static String unitSpeed = 0.05 + SpaceUnit.K;
 
     public TextReader(String TextPath) {
         this(TextPath, unitSpeed);
@@ -39,43 +37,22 @@ public class TextReader {
         // TODO Auto-generated constructor stub
         this.TextPath = TextPath;
         this.file = new File(this.TextPath);
-        this.Offset = Offset;
         this.BlockCapcity = CommonUtil.FormatUnit(BlockCapcity);
     }
 
-    public void setOffset(long offset) {
-        Offset = offset;
-    }
-
-    public long getOffset() {
-        return Offset;
-    }
-
-    public void setTextPath(String textPath) {
+    public void resetTextPath(String textPath) {
         this.TextPath = textPath;
-        this.setOffset(0);
-        this.clearBlock();
     }
 
-    public byte[] getBlock() {
-        return Block;
-    }
-
-    public void clearBlock() {
-        this.Block = null;
-    }
-
-    public long LoadBlock() {
-        return LoadBlock(this.Offset);
-    }
-    
-    public long LoadBlock(long Offset) {
+    @Override
+    public byte[] LoadBlock(long Offset) {
         try {
             InputStream inputStream = new FileInputStream(file);
             inputStream.skip(Offset);
             InputStream sbs = new BufferedInputStream(inputStream);
             ByteArrayOutputStream readedByte = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024];
+            Double bufferSize = CommonUtil.FormatUnit(unitSpeed);
+            byte[] buffer = new byte[bufferSize.intValue()];
             double blockSize = BlockCapcity;
             int readSize = 0;
             int readLength = 0;
@@ -83,20 +60,18 @@ public class TextReader {
                 readSize += readLength;
                 readedByte.write(buffer, 0, readLength);
             }
-            Block = readedByte.toByteArray();
-            readSize = Trim(Block);
             inputStream.close();
             sbs.close();
-            return readSize;
+            return readedByte.toByteArray();
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        return -1;
+        return null;
     }
 
     // Cut by the end of /n|/r characters and return after read size
-    private int Trim(byte[] bytes) {
+    public int getTransableSize(byte[] bytes) {
         for (int i = bytes.length - 1; i >= 0; i--) {
             if (bytes[i] == StrSplitSign.n || bytes[i] == StrSplitSign.r || bytes[i] == StrSplitSign.end) {
                 return i;

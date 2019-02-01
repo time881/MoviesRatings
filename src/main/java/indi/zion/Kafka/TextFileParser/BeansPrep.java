@@ -1,5 +1,6 @@
 package indi.zion.Kafka.TextFileParser;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
@@ -86,8 +87,14 @@ public class BeansPrep<T extends Bean> {
 
     private void InitProp() {
         try {
-            InputStream inStream = TextReader.class.getResourceAsStream("MsgStructure.properties");
-            props.load(inStream);
+            InputStream inStream = TextReader.class.getClassLoader().getResourceAsStream("MsgStructure/MsgStructure.properties");
+            if(inStream != null){
+                props.load(inStream);
+            }else {
+                FileInputStream MsgFileInStream = new FileInputStream(
+                        "config_properties//MsgStructure//MsgStructure.properties");
+                props.load(MsgFileInStream);
+            }
             inStream.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block

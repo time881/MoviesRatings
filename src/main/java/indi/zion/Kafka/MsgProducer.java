@@ -31,14 +31,14 @@ public class MsgProducer {
     private String TagPath;
     private KafkaProducer<String, Rate> kfkprod;
     private ReadController<Rate> readController;
-    private int sleepSpeed = 10 * 1000;
-    private String sizeSpeed = 0.6 + SpaceUnit.K;
+    private int readCycleTime = 10000 * 1000;
+    private String requestSize = 0.1 + SpaceUnit.K;
 
     public MsgProducer() {
         InitProp();
         kfkprod = new KafkaProducer<String, Rate>(props);
         RatePath = props.getProperty("ratingPath");// one case
-        readController = new ReadController<Rate>(RatePath, sizeSpeed, Rate.class, 0);// pipe of reading beans, read
+        readController = new ReadController<Rate>(RatePath, requestSize, Rate.class, 0);// pipe of reading beans, read
                                                                                       // requestedSize once
     }
 
@@ -88,7 +88,7 @@ public class MsgProducer {
                         kfkprod.send(record, new SendCallback(record, 0));
                     }
                 }
-                leftTime = sleepSpeed - (System.currentTimeMillis() - currentTime);
+                leftTime = readCycleTime - (System.currentTimeMillis() - currentTime);
                 System.out.println(leftTime);
                 if (leftTime > 0) {
                     try {
