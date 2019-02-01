@@ -132,7 +132,6 @@ public class MoviesHotStatistic {
                     jsc,
                     LocationStrategies.PreferConsistent(),
                     ConsumerStrategies.<String, Rate>Subscribe(topic, kafkaParams));
-            System.out.println("=================================length of records is "+records.count()+"======================================");
             JavaPairDStream<Integer, Tuple2<Double, Integer>> kv = StatisticTool.MapToRateWithCount(records);
             JavaPairDStream<Integer, Tuple2<Double, Integer>> result = StatisticTool.MapPairToCount(kv);
             JavaDStream<String> MeanByMID = StatisticTool.MeanRate(result);
@@ -193,7 +192,6 @@ class StatisticTool implements Serializable {
                 stringJavaRDD.foreachPartition(new VoidFunction<Iterator<String>>() {
                     @Override
                     public void call(Iterator<String> stringIterator) throws Exception {
-                        System.out.println("============================"+HbaseTableInfo[0]+"=============================================");
                         Configuration configuration = HBaseConfiguration.create();
                         Connection connection = ConnectionFactory.createConnection(configuration);
                         Table table = connection.getTable(TableName.valueOf(HbaseTableInfo[0]));
@@ -230,7 +228,6 @@ class StatisticTool implements Serializable {
                 stringJavaRDD.foreach(new VoidFunction<String>() {
                     @Override
                     public void call(String s) throws Exception {
-                        System.out.println("====================================================get===========================================");
                         System.out.println(s);
                     }
                 });
